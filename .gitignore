@@ -1,4 +1,8 @@
 # remove the executable from git, will put it as release
 *.lce
+*.lcdoc
+*.lci
+manifest.xml
+*.lcm
 
 .DS_Store
