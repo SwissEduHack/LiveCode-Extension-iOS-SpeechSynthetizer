@@ -1,0 +1,4 @@
+# remove the executable from git, will put it as release
+*.lce
+
+.DS_Store
