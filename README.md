@@ -4,7 +4,7 @@ An extension for LiveCode that enables Text-To-Speech functionality on iOS.
 ## Installation
 You either build it yourself in LiveCode or download a built version from *Releases* tab.
 
-## Build
+### Build
 If you downloaded the file from the *Release* tab, go directly to **Install the extension** part.
 
 Go to *Tools -> Extension Builder*, open the *.lcb* file. Then, at the bottom, click on *Pacakge*. That will generate a *.lce* file.
