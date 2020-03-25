@@ -1,8 +1,8 @@
-# LiveCode-iOS-SpeechSyntetizer-Extension
+# LiveCode-iOS-SpeechSynthetizer-Extension
 An extension for LiveCode that enables Text-To-Speech functionality on iOS.
 
 ## Installation
-You either build it yourself in LiveCode or download a built version from *Releases* tab.
+You either build it yourself in LiveCode or download a built version from *Release* tab.
 
 ## Build
 If you downloaded the file from the *Release* tab, go directly to **Install the extension** part.
@@ -10,7 +10,7 @@ If you downloaded the file from the *Release* tab, go directly to **Install the 
 Go to *Tools -> Extension Builder*, open the *.lcb* file. Then, at the bottom, click on *Pacakge*. That will generate a *.lce* file.
 
 ### Install the extension
-Then you have it in your LiveCode project from the menu in *Tools -> Extension Manager* then *Add* and select the *.lce* file. It will add the librairy *Speech syntetizer iOS*.
+Then you have it in your LiveCode project from the menu in *Tools -> Extension Manager* then *Add* and select the *.lce* file. It will add the librairy *Speech synthetizer iOS*.
 
 ## Documentation
 
