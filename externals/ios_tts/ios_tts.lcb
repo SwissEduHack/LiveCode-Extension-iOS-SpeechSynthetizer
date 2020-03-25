@@ -1,0 +1,190 @@
+library eduhack.speechios
+
+metadata title is "Speech Synthesizer iOS"
+metadata author is "EduHack"
+metadata version is "1.0.0"
+
+ use com.livecode.foreign
+ use com.livecode.objc
+ use com.livecode.list
+
+-- Alloc handler
+ foreign handler Objc_AVSpeechUtteranceAlloc() returns ObjcRetainedId binds to "objc:AVSpeechUtterance.+alloc"
+ foreign handler Objc_AVSpeechSynthesizerAlloc() returns ObjcRetainedId binds to "objc:AVSpeechSynthesizer.+alloc"
+
+-- Initialize the utterance with a string
+ foreign handler ObjC_AVInitWithString(in pObj as ObjcRetainedId, in pString as ObjcId) returns ObjcRetainedId binds to "objc:AVSpeechUtterance.-initWithString:"
+
+
+--Utterance parametrization
+--Rate
+foreign handler ObjC_UtteranceRateGet(in pUtterance as ObjcRetainedId) returns CFloat binds to "objc:AVSpeechUtterance.-rate"
+foreign handler ObjC_UtteranceRateSet(in pUtterance as ObjcRetainedId, in pRate as CFloat) returns nothing binds to "objc:AVSpeechUtterance.-setRate:"
+
+--Pitch
+foreign handler ObjC_UtterancePitchGet(in pUtterance as ObjcRetainedId) returns CFloat binds to "objc:AVSpeechUtterance.-pitchMultiplier"
+foreign handler ObjC_UtterancePitchSet(in pUtterance as ObjcRetainedId, in pPitch as CFloat) returns nothing binds to "objc:AVSpeechUtterance.-setPitchMultiplier:"
+
+--Volume
+foreign handler ObjC_UtteranceVolumeGet(in pUtterance as ObjcRetainedId) returns CFloat binds to "objc:AVSpeechUtterance.-volume"
+foreign handler ObjC_UtteranceVolumeSet(in pUtterance as ObjcRetainedId, in pVolume as CFloat) returns nothing binds to "objc:AVSpeechUtterance.-setVolume:"
+
+--Voice
+foreign handler ObjC_AVSpeechSynthesisVoiceFindLocale(in pLocale as ObjcId) returns ObjcId binds to "objc:AVSpeechSynthesisVoice.+voiceWithLanguage:"
+foreign handler ObjC_AVSpeechSynthesisVoiceFindName(in pName as ObjcId) returns ObjcId binds to "objc:AVSpeechSynthesisVoice.+voiceWithIdentifier:"
+foreign handler ObjC_AVSpeechSynthesisVoiceList() returns ObjcId binds to "objc:AVSpeechSynthesisVoice.+speechVoices"
+foreign handler ObjC_AVSpeechSynthesisVoiceGetName(in pVoice as ObjcId) returns ObjcId binds to "objc:AVSpeechSynthesisVoice.-name"
+foreign handler ObjC_AVSpeechSynthesisVoiceGetLanguage(in pVoice as ObjcId) returns ObjcId binds to "objc:AVSpeechSynthesisVoice.-language"
+
+foreign handler ObjC_UtteranceVoiceGet(in pUtterance as ObjcRetainedId) returns ObjcObject binds to "objc:AVSpeechUtterance.-voice"
+foreign handler ObjC_UtteranceVoiceSet(in pUtterance as ObjcRetainedId, in pVoice as ObjcId) returns nothing binds to "objc:AVSpeechUtterance.-setVoice:"
+
+-- Synthesizer's state
+foreign handler ObjC_AVSpeechSynthetizerIsSpeaking(in pSynthesizer as ObjcRetainedId) returns Bool binds to "objc:AVSpeechSynthesizer.-isSpeaking"
+foreign handler ObjC_AVSpeechSynthetizerIsPaused(in pSynthesizer as ObjcRetainedId) returns Bool binds to "objc:AVSpeechSynthesizer.-isPaused"
+
+
+ -- Read the utterance
+ foreign handler Objc_AVSpeechSynthesizerSpeak(in pSynthesizer as ObjcRetainedId, in pUtterance as ObjcRetainedId) returns nothing binds to "objc:AVSpeechSynthesizer.-speakUtterance:"
+
+--Speech Control
+ foreign handler Objc_AVSpeechSynthesizerPause(in pSynthesizer as ObjcRetainedId, in pBoundary as CFloat) returns Bool binds to "objc:AVSpeechSynthesizer.-pauseSpeakingAtBoundary:"
+
+ foreign handler Objc_AVSpeechSynthesizerStop(in pSynthesizer as ObjcRetainedId, in pBoundary as CFloat) returns Bool binds to "objc:AVSpeechSynthesizer.-stopSpeakingAtBoundary:"
+
+ foreign handler Objc_AVSpeechSynthesizerContinue(in pSynthesizer as ObjcRetainedId) returns Bool binds to "objc:AVSpeechSynthesizer.-continueSpeaking"
+
+variable mSynthesizer as optional ObjcObject
+
+--Rate between 0 and 1
+--Pitch between 0.5 and 2
+--Volume between 0 and 1
+/**
+Summary: Use this function to speak a given text
+
+Parameters:
+pRate: The rate of the speech (between 0 and 1)
+pPitch: The pitch of the speech (between 0.5 and 2)
+pVolume: The volume of the speech (between 0 and 1)
+pVoice: The voice of the speech (for example "fr-FR")
+pString: The text to be spoken
+
+*/
+  public unsafe handler EdHSpeak(in pRate as CFloat, in pPitch as CFloat,in pVolume as CFloat,in pVoice as String, in pString as String) returns String
+    --initializing components
+  	variable tUtterance as ObjcObject
+  	put Objc_AVSpeechUtteranceAlloc() into tUtterance
+  	put ObjC_AVInitWithString(tUtterance, StringToNSString(pString)) into tUtterance
+
+    if tUtterance is nothing then
+      return "Error : utterance could not be initialized"
+    end if
+    --variable mSynthesizer as ObjcObject
+    if mSynthesizer is nothing then
+      put Objc_AVSpeechSynthesizerAlloc() into mSynthesizer
+    end if
+
+    if mSynthesizer is nothing then
+      return "Error : synthesizer could not be initialized"
+    end if
+
+    --setting voice
+    variable tVoice as ObjcObject
+    if "-" is in pVoice then
+      put ObjC_AVSpeechSynthesisVoiceFindLocale(StringToNSString(pVoice)) into tVoice
+    else
+      put ObjC_AVSpeechSynthesisVoiceFindName(StringToNSString("com.apple.ttsbundle." & pVoice & "-compact")) into tVoice
+    end if
+
+    if tVoice is nothing then
+      return "Error : voice not found"
+    end if
+    ObjC_UtteranceVoiceSet(tUtterance,tVoice)
+
+    --setting rate
+  	ObjC_UtteranceRateSet(tUtterance, pRate)
+
+  	--setting pitch
+  	ObjC_UtterancePitchSet(tUtterance, pPitch)
+
+  	--setting volume
+  	ObjC_UtteranceVolumeSet(tUtterance, pVolume)
+
+
+    Objc_AVSpeechSynthesizerSpeak(mSynthesizer, tUtterance)
+    return "Done"
+ end handler
+
+/**
+Summary: Use this function to get the list of available voice
+*/
+public unsafe handler EdHGetVoicesList()
+  --list of AVSpeechSynthesisVoice
+  variable tVoicesList as List
+  put ListFromNSArray(ObjC_AVSpeechSynthesisVoiceList()) into tVoicesList
+  if tvoicesList is nothing then
+    return the empty list
+  end if
+
+  --list of String
+  variable tVoicesNameList as List
+  variable tVoice as any
+  repeat for each element tVoice in tVoicesList
+    push StringFromNSString(ObjC_AVSpeechSynthesisVoiceGetName(tVoice)) & " " & StringFromNSString(ObjC_AVSpeechSynthesisVoiceGetLanguage(tVoice)) onto tVoicesNameList
+  end repeat
+
+
+  return tVoicesNameList
+end handler
+
+public unsafe handler EdHGetVoices()
+  --list of AVSpeechSynthesisVoice
+    variable tVoicesList as List
+  put ListFromNSArray(ObjC_AVSpeechSynthesisVoiceList()) into tVoicesList
+  if tvoicesList is nothing then
+    return "no voices found"
+  end if
+
+  --list of String
+  variable tVoicesNameList as String
+  put "" into tVoicesNameList
+  variable tVoice as any
+  repeat for each element tVoice in tVoicesList
+    put tVoicesNameList  & StringFromNSString(ObjC_AVSpeechSynthesisVoiceGetName(tVoice)) & " " & StringFromNSString(ObjC_AVSpeechSynthesisVoiceGetLanguage(tVoice)) & ";" into tVoicesNameList
+  end repeat
+
+  delete the last char of tVoicesNameList
+
+  return tVoicesNameList
+end handler
+
+--immediate is 0
+--word is 1
+public unsafe handler EdHPause(in tWord as CFloat)
+    Objc_AVSpeechSynthesizerPause(mSynthesizer,tWord)
+end handler
+
+public unsafe handler EdHStop(in tWord as CFloat)
+    Objc_AVSpeechSynthesizerStop(mSynthesizer,tWord)
+end handler
+
+public unsafe handler EdHContinue()
+  Objc_AVSpeechSynthesizerContinue(mSynthesizer)
+end handler
+
+public unsafe handler EdHIsSpeaking()
+   if mSynthesizer is nothing then
+      return false
+   end if
+   return ObjC_AVSpeechSynthetizerIsSpeaking(mSynthesizer)
+end handler
+
+public unsafe handler EdHIsPaused()
+   if mSynthesizer is nothing then
+      put Objc_AVSpeechSynthesizerAlloc() into mSynthesizer
+   end if
+   return ObjC_AVSpeechSynthetizerIsPaused(mSynthesizer)
+end handler
+
+
+end library
