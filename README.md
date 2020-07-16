@@ -7,7 +7,7 @@ You either build it yourself in LiveCode or download a built version from *Relea
 ### Build
 If you downloaded the file from the *Release* tab, go directly to **Install the extension** part.
 
-Go to *Tools -> Extension Builder*, open the *.lcb* file. Then, at the bottom, click on *Pacakge*. That will generate a *.lce* file.
+Open *LiveCode* and go to *Tools -> Extension Builder*, open the *.lcb* file. Then, at the bottom, click on *Package*. That will generate a *.lce* file.
 
 ### Install the extension
 Then you have it in your LiveCode project from the menu in *Tools -> Extension Manager* then *Add* and select the *.lce* file. It will add the librairy *Speech synthetizer iOS*.
